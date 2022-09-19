@@ -1,8 +1,16 @@
 [package]
-name = "FluidWorks"
+name = "GraphicsEngine2D"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+minifb = "0.23.0"
+line_drawing = "1.0.0"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
