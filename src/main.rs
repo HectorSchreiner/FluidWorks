@@ -13,11 +13,8 @@ pub fn main() {
         buffer: vec![0; WIDTH * HEIGHT],
     };
 
-    let mut fluids: Fluid;
-    &fluids.new(2, 0.0, 0.0, 1.0);
-
-    println!("{:?}", fluids);
-
+    let mut fluid = Fluid::new(0, 0.0, 0.0, 0.0);
+    print!("{:?}", fluid);
     let mut window = Window::new("FluidWorks", WIDTH, HEIGHT, WindowOptions::default()).unwrap();
 
     // Limit to max ~60 fps update rate
