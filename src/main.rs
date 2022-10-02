@@ -4,8 +4,10 @@ use minifb::*;
 pub use renderer::*;
 pub use utils::*;
 
+mod draw;
 mod fluid;
 mod renderer;
+pub mod simulation;
 mod utils;
 
 pub fn main() {
@@ -13,7 +15,7 @@ pub fn main() {
         buffer: vec![0; WIDTH * HEIGHT],
     };
 
-    let mut fluid = Fluid::new(0, 0.0, 0.0, 0.0);
+    let mut fluid = Fluid::new(1, 0.1, 0.0, 0.0);
     print!("{:?}", fluid);
     let mut window = Window::new("FluidWorks", WIDTH, HEIGHT, WindowOptions::default()).unwrap();
 
@@ -27,7 +29,9 @@ pub fn main() {
         (&mut renderer, &window);
 
         renderer.clear(Color::BLACK); //Clear screen
+        renderer.render_fluid(&fluid);
 
-        renderer.rect(&Square::new(20, 20, (20, 20)), Color::GREEN);
+        fluid.add_density(WIDTH / 2, HEIGHT / 2, 100.0);
+        fluid.time_step();
     }
 }

@@ -34,14 +34,14 @@ impl Fluid {
         }
     }
 
-    pub fn add_density(&mut self, x: i32, y: i32, ammount: f32) {
+    pub fn add_density(&mut self, x: usize, y: usize, ammount: f32) {
         let index = to_buffer(x, y);
         self.density[index] += ammount;
     }
 
-    pub fn add_velocity(&mut self, x: i32, y: i32, ammountX: f32, ammountY: f32) {
+    pub fn add_velocity(&mut self, x: usize, y: usize, ammount_x: f32, ammount_y: f32) {
         let index = to_buffer(x, y);
-        self.vx[index] += ammountX;
-        self.vy[index] += ammountY;
+        self.vx[index] += ammount_x;
+        self.vy[index] += ammount_y;
     }
 }

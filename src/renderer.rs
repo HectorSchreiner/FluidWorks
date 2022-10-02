@@ -1,4 +1,4 @@
-use crate::utils::{Color, Position, HEIGHT, PI, WIDTH};
+use crate::utils::{Color, Position, HEIGHT, WIDTH};
 use line_drawing::Bresenham;
 
 pub struct Renderer {

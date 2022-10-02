@@ -2,6 +2,7 @@ pub const N: usize = 252;
 pub const WIDTH: usize = N;
 pub const HEIGHT: usize = N;
 pub const PI: f32 = 3.14159265;
+pub const ITER: i32 = 4;
 
 #[derive(Clone, Copy)]
 pub enum Color {
@@ -10,11 +11,10 @@ pub enum Color {
     RED = 0xff0000,
     GREEN = 0x00ff00,
     BLUE = 0x0000ff,
-    DARK_GREY = 0x202020,
 }
 
-pub fn to_buffer(x: i32, y: i32) -> usize {
-    x as usize + y as usize * N
+pub fn to_buffer(x: usize, y: usize) -> usize {
+    x + y * N
 }
 
 pub struct Position {
