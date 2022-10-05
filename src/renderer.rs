@@ -1,4 +1,4 @@
-use crate::utils::{Color, Position, HEIGHT, WIDTH};
+use crate::utils::*;
 use line_drawing::Bresenham;
 
 pub struct Renderer {
@@ -15,13 +15,14 @@ impl Renderer {
         }
     }
 
-    pub fn rect(&mut self, square: &Square, color: Color) {
+    pub fn rect(&mut self, square: &Square, color: (u8, u8, u8)) {
         let pos_y = square.position.y;
         let pos_x = square.position.x;
+        let col = from_u8_rgb(color.0, color.1, color.2);
 
         for y in pos_y..square.height + pos_y {
             for x in pos_x..square.lenght + pos_x {
-                self.buffer[(y * WIDTH as u32 + x) as usize] = color as _;
+                self.buffer[(y * WIDTH as u32 + x) as usize] = col as _;
             }
         }
     }

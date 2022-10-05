@@ -1,3 +1,5 @@
+use std::vec;
+
 use crate::utils::*;
 
 #[derive(Debug)]
@@ -7,15 +9,14 @@ pub struct Fluid {
     pub diffusion: f32,
     pub viscosity: f32,
 
-    pub s: Vec<f32>,
-    pub density: Vec<f32>,
+    pub s: Box<[f32; N * N]>,
+    pub density: Box<[f32; N * N]>,
 
-    pub vx: Vec<f32>,
-    pub vy: Vec<f32>,
+    pub vx: Box<[f32; N * N]>,
+    pub vy: Box<[f32; N * N]>,
 
-    // Tidligere hastighed
-    pub vx0: Vec<f32>,
-    pub vy0: Vec<f32>,
+    pub vx0: Box<[f32; N * N]>,
+    pub vy0: Box<[f32; N * N]>,
 }
 
 impl Fluid {
@@ -25,18 +26,17 @@ impl Fluid {
             dt,
             diffusion,
             viscosity,
-            s: Vec::with_capacity(N * N),
-            density: Vec::with_capacity(N * N),
-            vx: Vec::with_capacity(N * N),
-            vy: Vec::with_capacity(N * N),
-            vx0: Vec::with_capacity(N * N),
-            vy0: Vec::with_capacity(N * N),
+            s: Box::new([0.0; N * N]),
+            density: Box::new([0.0; N * N]),
+            vx: Box::new([0.0; N * N]),
+            vy: Box::new([0.0; N * N]),
+            vx0: Box::new([0.0; N * N]),
+            vy0: Box::new([0.0; N * N]),
         }
     }
 
     pub fn add_density(&mut self, x: usize, y: usize, ammount: f32) {
-        let index = to_buffer(x, y);
-        self.density[index] += ammount;
+        self.density[to_buffer(x, y)] += ammount;
     }
 
     pub fn add_velocity(&mut self, x: usize, y: usize, ammount_x: f32, ammount_y: f32) {

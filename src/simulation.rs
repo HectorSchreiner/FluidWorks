@@ -1,11 +1,17 @@
 use crate::utils::*;
 
-pub fn diffuse(b: i32, x: Vec<f32>, x0: Vec<f32>, diff: f32, dt: f32) {
-    let a = dt * diff * ((N - 2) * (N - 2)) as f32;
+pub fn diffuse(
+    b: i32,
+    x: &mut Box<[f32; N * N]>,
+    x0: &mut Box<[f32; N * N]>,
+    diffusion: f32,
+    dt: &mut f32,
+) {
+    let a = *dt * diffusion * ((N - 2) * (N - 2)) as f32;
     lin_solve(b as f32, x, x0, a, 1.0 + 6.0 * a);
 }
 
-pub fn lin_solve(b: f32, mut x: Vec<f32>, x0: Vec<f32>, a: f32, c: f32) {
+pub fn lin_solve(b: f32, x: &mut Box<[f32; N * N]>, x0: &mut Box<[f32; N * N]>, a: f32, c: f32) {
     let c_recip = 1.0 / c;
     for _k in 0..ITER {
         for j in 0..(N - 1) {
@@ -19,32 +25,163 @@ pub fn lin_solve(b: f32, mut x: Vec<f32>, x0: Vec<f32>, a: f32, c: f32) {
             }
         }
     }
-    //set_bnd(b, x, N);
+    set_bnd(b as i32, x);
 }
 
-pub fn project(mut veloc_x: Vec<f32>, mut veloc_y: Vec<f32>, mut p: Vec<f32>, mut div: Vec<f32>) {
+pub fn project(
+    velocity_x: &mut Box<[f32; N * N]>,
+    velocity_y: &mut Box<[f32; N * N]>,
+    p: &mut Box<[f32; N * N]>,
+    div: &mut Box<[f32; N * N]>,
+) {
     for j in 1..(N - 1) {
         for i in 1..(N - 1) {
             div[to_buffer(i, j)] = -0.5
-                * (veloc_x[to_buffer(i + 1, j)] - veloc_x[to_buffer(i - 1, j)]
-                    + veloc_y[to_buffer(i, j + 1)]
-                    - veloc_y[to_buffer(i, j - 1)])
+                * (velocity_x[to_buffer(i + 1, j)] - velocity_x[to_buffer(i - 1, j)]
+                    + velocity_y[to_buffer(i, j + 1)]
+                    - velocity_y[to_buffer(i, j - 1)])
                 / N as f32;
-            p[to_buffer(i, j)] = 0 as f32;
+            p[to_buffer(i, j)] = 0.0;
         }
     }
-    //set_bnd(0, div);
-    //set_bnd(0, p);
-    lin_solve(0.0, p.to_vec(), div, 1.0, 6.0);
+    set_bnd(0, div);
+    set_bnd(0, p);
+    lin_solve(0.0, p, div, 1.0, 6.0);
 
     for j in 1..(N - 1) {
         for i in 1..(N - 1) {
-            veloc_x[to_buffer(i, j)] -=
+            velocity_x[to_buffer(i, j)] -=
                 0.5 * (p[to_buffer(i + 1, j)] - p[to_buffer(i - 1, j)]) * (N as f32);
-            veloc_y[to_buffer(i, j)] -=
+            velocity_y[to_buffer(i, j)] -=
                 0.5 * (p[to_buffer(i, j + 1)] - p[to_buffer(i, j - 1)]) * (N as f32);
         }
     }
-    //set_bnd(1, velocX);
-    //set_bnd(2, velocY);
+    set_bnd(1, velocity_y);
+    set_bnd(2, velocity_y);
+}
+
+pub fn advect(
+    b: i32,
+    d: &mut Box<[f32; N * N]>,
+    d0: &Box<[f32; N * N]>,
+    velocity_x: &Box<[f32; N * N]>,
+    velocity_y: &Box<[f32; N * N]>,
+    dt: &mut f32,
+) {
+    let mut i0;
+    let mut i1;
+    let mut j0;
+    let mut j1;
+
+    let dtx = *dt * (N - 2) as f32;
+    let dty = *dt * (N - 2) as f32;
+
+    let mut s0;
+    let mut s1;
+    let mut t0;
+    let mut t1;
+    let mut tmp1;
+    let mut tmp2;
+    let mut x: f32;
+    let mut y: f32;
+
+    let nfloat = N;
+    let mut ifloat;
+    let mut jfloat;
+
+    for j in 1..N - 1 {
+        jfloat = j;
+        for i in 1..N - 1 {
+            ifloat = i;
+            tmp1 = dtx * velocity_x[to_buffer(i, j)];
+            tmp2 = dty * velocity_y[to_buffer(i, j)];
+            x = ifloat as f32 - tmp1;
+            y = jfloat as f32 - tmp2;
+
+            if x < 0.5 {
+                x = 0.5;
+            }
+            if x > nfloat as f32 + 0.5 {
+                x = nfloat as f32 + 0.5;
+            }
+            i0 = x.floor();
+            i1 = i0 + 1.0;
+            if y < 0.5 {
+                y = 0.5;
+            }
+            if y > nfloat as f32 + 0.5 {
+                y = nfloat as f32 + 0.5;
+            }
+            j0 = y.floor();
+            j1 = j0 + 1.0;
+
+            s1 = x - i0;
+            s0 = 1.0 - s1;
+            t1 = y - j0;
+            t0 = 1.0 - t1;
+
+            let i0i = i0;
+            let i1i = i1;
+            let j0i = j0;
+            let j1i = j1;
+
+            d[to_buffer(i, j)] = s0 * (t0 * d0[to_buffer(i0i as usize, j0i as usize)])
+                + (t1 * d0[to_buffer(i0i as usize, j1i as usize)])
+                + s1 * (t0 * d0[to_buffer(i1i as usize, j0i as usize)])
+                + (t1 * d0[to_buffer(i1i as usize, j1i as usize)]);
+        }
+    }
+    set_bnd(b, d);
+}
+
+pub fn set_bnd(b: i32, x: &mut Box<[f32; N * N]>) {
+    for j in 1..N - 1 {
+        for i in 1..N - 1 {
+            if b == 3 {
+                x[to_buffer(i, j)] = -x[to_buffer(i, j)];
+                x[to_buffer(i, j)] = -x[to_buffer(i, j)]
+            } else {
+                x[to_buffer(i, j)] = x[to_buffer(i, j)];
+                x[to_buffer(i, j)] = x[to_buffer(i, j)];
+            }
+        }
+    }
+    for _k in 1..N - 1 {
+        for i in 1..N - 1 {
+            if b == 2 {
+                x[to_buffer(i, 0)] = -x[to_buffer(i, 1)];
+                x[to_buffer(i, N - 1)] = -x[to_buffer(i, N - 2)];
+            } else {
+                x[to_buffer(i, 0)] = x[to_buffer(i, 1)];
+                x[to_buffer(i, N - 1)] = x[to_buffer(i, N - 2)];
+            }
+        }
+    }
+
+    for _k in 1..N - 1 {
+        for j in 1..N - 1 {
+            if b == 1 {
+                x[to_buffer(0, j)] = -x[to_buffer(1, j)];
+                x[to_buffer(N - 1, j)] = -x[to_buffer(N - 2, j)];
+            } else {
+                x[to_buffer(0, j)] = x[to_buffer(1, j)];
+                x[to_buffer(N - 1, j)] = x[to_buffer(N - 2, j)];
+            }
+        }
+    }
+
+    x[to_buffer(0, 0)] = 0.33 * (x[to_buffer(1, 0)] + x[to_buffer(0, 1)] + x[to_buffer(0, 0)]);
+    x[to_buffer(0, N - 1)] =
+        0.33 * (x[to_buffer(1, N - 1)] + x[to_buffer(0, N - 2)] + x[to_buffer(0, N - 1)]);
+    x[to_buffer(0, 0)] = 0.33 * (x[to_buffer(1, 0)] + x[to_buffer(0, 1)] + x[to_buffer(0, 0)]);
+    x[to_buffer(0, N - 1)] =
+        0.33 * (x[to_buffer(1, N - 1)] + x[to_buffer(0, N - 2)] + x[to_buffer(0, N - 1)]);
+    x[to_buffer(N - 1, 0)] =
+        0.33 * (x[to_buffer(N - 2, 0)] + x[to_buffer(N - 1, 1)] + x[to_buffer(N - 1, 0)]);
+    x[to_buffer(N - 1, N - 1)] = 0.33
+        * (x[to_buffer(N - 2, N - 1)] + x[to_buffer(N - 1, N - 2)] + x[to_buffer(N - 1, N - 1)]);
+    x[to_buffer(N - 1, 0)] =
+        0.33 * (x[to_buffer(N - 2, 0)] + x[to_buffer(N - 1, 1)] + x[to_buffer(N - 1, 0)]);
+    x[to_buffer(N - 1, N - 1)] = 0.33
+        * (x[to_buffer(N - 2, N - 1)] + x[to_buffer(N - 1, N - 2)] + x[to_buffer(N - 1, N - 1)]);
 }
