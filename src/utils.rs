@@ -1,7 +1,7 @@
 pub const N: usize = 64;
 pub const PI: f32 = 3.14159265;
 pub const ITER: i32 = 4;
-pub const SCALE: usize = 4;
+pub const SCALE: usize = 8;
 pub const WIDTH: usize = N * SCALE;
 pub const HEIGHT: usize = N * SCALE;
 
@@ -12,6 +12,10 @@ pub enum Color {
     RED = 0xff0000,
     GREEN = 0x00ff00,
     BLUE = 0x0000ff,
+}
+
+pub fn to_screem_buffer(x: usize, y: usize) -> usize {
+    x + y * WIDTH
 }
 
 pub fn to_buffer(x: usize, y: usize) -> usize {

@@ -15,9 +15,8 @@ pub fn main() {
         buffer: vec![0; WIDTH * HEIGHT],
     };
 
-    let fluid = Fluid::new(0, 0.1, 0.0, 0.0);
+    let mut fluid = Fluid::new(0, 0.1, 0.0, 0.0);
     let mut window = Window::new("FluidWorks", WIDTH, HEIGHT, WindowOptions::default()).unwrap();
-    print!("lenght is: {:?}", fluid.s.len());
 
     // Limit to max ~60 fps update rate
     window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
@@ -28,7 +27,9 @@ pub fn main() {
             .unwrap();
         //(&mut renderer, &window);
 
-        renderer.clear(Color::BLACK); //Clear screen
+        renderer.clear(Color::WHITE);
+        fluid.time_step();
         renderer.render_fluid(&fluid);
+        renderer.add_stuff(&window, &mut fluid, 100.0, 20.0, 20.0);
     }
 }

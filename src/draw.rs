@@ -1,7 +1,10 @@
+use crate::renderer;
 use crate::renderer::*;
 use crate::simulation::*;
 use crate::utils::*;
 use crate::Fluid;
+use crate::Window;
+use minifb::*;
 
 impl Fluid {
     pub fn time_step(&mut self) {
@@ -33,20 +36,49 @@ impl Fluid {
 
 impl Renderer {
     pub fn render_fluid(&mut self, fluid: &Fluid) {
-        for i in 0..N {
-            for j in 0..N {
-                let x = i * SCALE;
-                let y = j * SCALE;
-                let d = fluid.density[to_buffer(i, j)];
-                println!("{:?}", fluid.density[1000]);
-                let color = ((d % 255.0) as u8, (d % 255.0) as u8, (d % 255.0) as u8);
+        //iterer igennem density array size (N*N)
+        for y in 0..N {
+            for x in 0..N {
+                let d = fluid.density[to_buffer(x, y)];
+                let color = (
+                    d.clamp(0.0, 255.0) as u8,
+                    d.clamp(0.0, 255.0) as u8,
+                    d.clamp(0.0, 255.0) as u8,
+                );
                 self.rect(
-                    &Square::new(SCALE as _, SCALE as _, (x as u32, y as u32)),
+                    &Square::new(
+                        SCALE as _,
+                        SCALE as _,
+                        (x as u32 * SCALE as u32, y as u32 * SCALE as u32),
+                    ),
                     color,
                 );
             }
         }
     }
 
-    pub fn density_adder(&mut self) {}
+    pub fn add_stuff(
+        &mut self,
+        window: &Window,
+        fluid: &mut Fluid,
+        density_ammount: f32,
+        v_amm_x: f32,
+        v_amm_y: f32,
+    ) {
+        if window.get_mouse_down(MouseButton::Left) {
+            window.get_mouse_pos(MouseMode::Clamp).map(|mouse| {
+                fluid.add_density(
+                    mouse.0 as usize / SCALE,
+                    mouse.1 as usize / SCALE,
+                    density_ammount,
+                );
+                fluid.add_velocity(
+                    mouse.0 as usize / SCALE,
+                    mouse.1 as usize / SCALE,
+                    v_amm_x,
+                    v_amm_y,
+                )
+            });
+        }
+    }
 }
