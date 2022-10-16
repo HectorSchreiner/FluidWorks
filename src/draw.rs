@@ -40,11 +40,8 @@ impl Renderer {
         for y in 0..N {
             for x in 0..N {
                 let d = fluid.density[to_buffer(x, y)];
-                let color = (
-                    d.clamp(0.0, 255.0) as u8,
-                    d.clamp(0.0, 255.0) as u8,
-                    d.clamp(0.0, 255.0) as u8,
-                );
+                let color: (u8, u8, u8) = (d as u8 % 255, d as u8 % 255, d as u8 % 255);
+
                 self.rect(
                     &Square::new(
                         SCALE as _,
@@ -80,5 +77,11 @@ impl Renderer {
                 )
             });
         }
+    }
+}
+
+pub fn if_true(b: bool, x: usize, y: usize) {
+    if b {
+        println!("x: {} y: {}", x, y);
     }
 }

@@ -13,9 +13,9 @@ pub fn diffuse(
 
 pub fn lin_solve(b: f32, x: &mut Box<[f32; N * N]>, x0: &mut Box<[f32; N * N]>, a: f32, c: f32) {
     let c_recip = 1.0 / c;
-    for _k in 0..ITER {
-        for j in 0..(N - 1) {
-            for i in 0..(N - 1) {
+    for _k in 1..ITER {
+        for j in 1..(N - 1) {
+            for i in 1..(N - 1) {
                 x[to_buffer(i, j)] = (x0[to_buffer(i, j)]
                     + a * (x[to_buffer(i + 1, j)]
                         + x[to_buffer(i - 1, j)]
@@ -85,32 +85,32 @@ pub fn advect(
     let mut x: f32;
     let mut y: f32;
 
-    let nfloat = N;
-    let mut ifloat;
-    let mut jfloat;
+    let nfloat: f32 = N as f32;
+    let mut ifloat: f32;
+    let mut jfloat: f32;
 
-    for j in 1..N - 1 {
-        jfloat = j;
-        for i in 1..N - 1 {
-            ifloat = i;
+    for j in 0..(N - 1) {
+        for i in 0..(N - 1) {
+            jfloat = j as f32;
+            ifloat = i as f32;
             tmp1 = dtx * velocity_x[to_buffer(i, j)];
             tmp2 = dty * velocity_y[to_buffer(i, j)];
-            x = ifloat as f32 - tmp1;
-            y = jfloat as f32 - tmp2;
+            x = ifloat - tmp1;
+            y = jfloat - tmp2;
 
             if x < 0.5 {
                 x = 0.5;
             }
-            if x > nfloat as f32 + 0.5 {
-                x = nfloat as f32 + 0.5;
+            if x > nfloat + 0.5 {
+                x = nfloat + 0.5;
             }
             i0 = x.floor();
             i1 = i0 + 1.0;
             if y < 0.5 {
                 y = 0.5;
             }
-            if y > nfloat as f32 + 0.5 {
-                y = nfloat as f32 + 0.5;
+            if y > nfloat + 0.5 {
+                y = nfloat + 0.5;
             }
             j0 = y.floor();
             j1 = j0 + 1.0;
@@ -120,15 +120,15 @@ pub fn advect(
             t1 = y - j0;
             t0 = 1.0 - t1;
 
-            let i0i = i0;
-            let i1i = i1;
-            let j0i = j0;
-            let j1i = j1;
+            if let Some(_) = [i0, j0, i1, j1].iter().find(|&&v| v >= nfloat) {
+                continue;
+            }
 
-            d[to_buffer(i, j)] = s0 * (t0 * d0[to_buffer(i0i as usize, j0i as usize)])
-                + (t1 * d0[to_buffer(i0i as usize, j1i as usize)])
-                + s1 * (t0 * d0[to_buffer(i1i as usize, j0i as usize)])
-                + (t1 * d0[to_buffer(i1i as usize, j1i as usize)]);
+            d[to_buffer(i, j)] = s0
+                * (t0 * d0[to_buffer(i0 as usize, j0 as usize)]
+                    + t1 * d0[to_buffer(i0 as usize, j1 as usize)])
+                + s1 * (t0 * d0[to_buffer(i1 as usize, j0 as usize)]
+                    + t1 * d0[to_buffer(i1 as usize, j1 as usize)]);
         }
     }
     set_bnd(b, d);

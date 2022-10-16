@@ -30,6 +30,6 @@ pub fn main() {
         renderer.clear(Color::WHITE);
         fluid.time_step();
         renderer.render_fluid(&fluid);
-        renderer.add_stuff(&window, &mut fluid, 100.0, 20.0, 20.0);
+        renderer.add_stuff(&window, &mut fluid, 1000.0, 0.0, -20.0);
     }
 }
