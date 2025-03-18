@@ -13,6 +13,7 @@ pub fn diffuse(
 
 pub fn lin_solve(b: f32, x: &mut Box<[f32; N * N]>, x0: &mut Box<[f32; N * N]>, a: f32, c: f32) {
     let c_recip = 1.0 / c;
+    // no way jeg har lavet de her shitty 3 nestede loops!!! og hvorfor bruger jeg ikke iterators!
     for _k in 1..ITER {
         for j in 1..(N - 1) {
             for i in 1..(N - 1) {
